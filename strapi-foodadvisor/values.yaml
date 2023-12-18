@@ -1,0 +1,175 @@
+backend:
+  labels:
+    app: foodadvisor
+    component: backend
+
+  deployment:
+    name: foodadvisor-backend
+    replicas: 1
+    image:
+      repository: larissaifpb/foodadvisor-api
+      pullPolicy: IfNotPresent
+      tag: "2.0.0"
+      ports:
+        containerPort: 1337
+        
+  extraEnvs:
+    - name: DATABASE_CLIENT
+      value: postgres
+    - name: DATABASE_HOST
+      valueFrom:
+        secretKeyRef:
+          name: foodadvisor
+          key: host
+    - name: DATABASE_PORT
+      valueFrom:
+        secretKeyRef:
+          name: foodadvisor
+          key: port
+    - name: DATABASE_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: foodadvisor
+          key: username
+    - name: DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: foodadvisor
+          key: password
+    - name: DATABASE_NAME
+      valueFrom:
+        secretKeyRef:
+          name: foodadvisor
+          key: database
+
+  service:
+    name: foodadvisor-backend
+    type: ClusterIP
+    ports:
+      port: 80
+      targetPort: 1337
+
+  secret:
+    name: foodadvisor
+    host: strapi-foodadvisor-postgresql
+    port: "5432"
+    username: strapi
+    password: strapi
+    database: strapi
+
+  ingress:
+    name: ingress-backend
+    enabled: true
+    className: "nginx"
+    annotations: {}
+    hosts:
+      - host: foodadvisor.backend
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: foodadvisor-backend
+                port:
+                  number: 1337
+    tls: []
+
+frontend:
+  labels:
+    app: foodadvisor
+    component: frontend
+
+  deployment:
+    name: foodadvisor-frontend
+    replicas: 1
+    image:
+      repository: larissaifpb/foodadvisor-client
+      pullPolicy: IfNotPresent
+      ports:
+        containerPort: 3000
+
+  extraEnvs:
+    - name: DATABASE_CLIENT
+      value: postgres
+    - name: DATABASE_HOST
+      value: strapi-foodadvisor-postgresql
+    - name: DATABASE_PORT
+      value: "5432"
+    - name: DATABASE_USERNAME
+      value: strapi
+    - name: DATABASE_PASSWORD
+      value: strapi
+    - name: DATABASE_NAME
+      value: strapi
+
+  service:
+    name: foodadvisor-frontend
+    type: ClusterIP
+    ports:
+      port: 80
+      targetPort: 3000
+
+  ingress:
+    name: ingress-frontend
+    enabled: true
+    className: "nginx"
+    annotations: {}
+    hosts:
+      - host: foodadvisor.client
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: foodadvisor-frontend
+                port:
+                  number: 3000
+    tls: []
+
+
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+
+securityContext: {}
+
+
+service:
+  type: ClusterIP
+  port: 80
+
+
+resources: {}
+
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumeMounts: []
+
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+postgresql:
+  auth:
+    postgresPassword: strapi
+    username: strapi
+    password: strapi
+    database: strapi
