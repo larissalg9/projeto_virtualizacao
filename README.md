@@ -80,7 +80,6 @@ Pré-requisitos:
 Na sequência, continue com os seguintes passos:
 
 ```bash
-minikube start
 habilitar o Ingress: minikube addons enable ingress
 git clone https://github.com/larissalg9/projeto_virtualizacao.git
 cd projeto_virtualizacao/strapi-foodadvisor
